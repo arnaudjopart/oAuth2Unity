@@ -2,8 +2,9 @@
 using System.Collections;
 using UnityEngine.Networking;
 using System.Collections.Generic;
-using LitJson;
+
 using System;
+using SimpleJSON;
 
 public class AuthManager : MonoBehaviour {
 
@@ -52,7 +53,7 @@ public class AuthManager : MonoBehaviour {
         {
 
             Debug.Log(www.downloadHandler.text);
-            JsonData responseData = JsonMapper.ToObject(www.downloadHandler.text);
+            JSONNode responseData = JSON.Parse(www.downloadHandler.text);
             string accessToken = (string)responseData["access_token"];
             print("Access granted: " + accessToken);
             StartCoroutine(GetData(accessToken));
@@ -65,21 +66,18 @@ public class AuthManager : MonoBehaviour {
         //formData.Add(new MultipartFormDataSection("Accept", "application/json"));
         //formData.Add(new MultipartFormDataSection("Content-type", ""));
         var headers = new Dictionary<string,string>();
-        headers.Add("Authorization", "Bearer " + _token);// 48293aef25046c0fee1e9a76dc4a0196");// );
+        headers.Add("Authorization", "Bearer 48293aef25046c0fee1e9a76dc4a0196");
         headers.Add("Accept", "application/json");
         headers.Add("Content-type", "application/json");
         WWW www = new WWW("https://api.enco.io/seaas/0.0.1/device/DemoRaspberryPi/stream/Temperature/pop", null, headers);
         yield return www;
         print(www.text);
-        JsonData data = JsonMapper.ToObject(www.text);
+        JSONNode data = JSON.Parse(www.text);
         Debug.Log(data["typedMessage"]["json_payload"]);
         string usefulJson = (string)data["typedMessage"]["json_payload"];
 
-        JsonMapper.RegisterExporter<float>((obj, writer) => writer.Write(Convert.ToDouble(obj)));
-        JsonMapper.RegisterImporter<double, float>(input => Convert.ToSingle(input));
-
-        JsonData usefulData = JsonMapper.ToObject(usefulJson);
-        int current_temperature = (int)usefulData["temperature"];
+        JSONNode usefulData = JSON.Parse(usefulJson);
+        float current_temperature = usefulData["temperature"].AsFloat;
         Debug.Log("Current temperature: " + current_temperature.ToString() + " ° C");
 
     }
